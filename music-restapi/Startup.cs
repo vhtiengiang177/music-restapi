@@ -28,6 +28,8 @@ namespace music_restapi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddMvc().AddXmlSerializerFormatters();
+            services.AddDbContext<APIDbContext>(options => options.UseSqlServer(@"Data Source=HONGDUC109\TIENGIANG; Initial Catalog=musicdb; User ID=sa; PWD=123456aA"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

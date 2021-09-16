@@ -15,24 +15,7 @@ namespace music_restapi.Data
         }
 
         public DbSet<Song> Songs { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Song>().HasData(
-                new Song
-                {
-                    Id = 1,
-                    Title = "A",
-                    Language = "Eng",
-                    Duration = "2:30"
-                },
-                new Song 
-                { 
-                    Id = 2,
-                    Title = "B",
-                    Language = "Viet",
-                    Duration = "3:00"
-                });
-        }
+        public DbSet<Album> Albums { get; set; }
+        public DbSet<Artist> Artists { get; set; }
     }
 }

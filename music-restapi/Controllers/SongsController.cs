@@ -8,84 +8,65 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace music_restapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class SongsController : ControllerBase
     {
-        private APIDbContext _dbContext;
-
+        public APIDbContext _dbContext { get; set; }
         public SongsController(APIDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        // GET: api/<SongsController>
-        [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            return Ok(await _dbContext.Songs.ToListAsync());
-        }
-
-        // GET api/<SongsController>/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
-        {
-            var song = await _dbContext.Songs.FindAsync(id);
-            if(song == null)
-            {
-                return NotFound();
-            }
-            else
-                return Ok(song);
-        }
-
-        // POST api/<SongsController>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Song song)
+        public async Task<IActionResult> Post([FromForm] Song song)
         {
             await _dbContext.Songs.AddAsync(song);
             await _dbContext.SaveChangesAsync();
             return StatusCode(StatusCodes.Status201Created);
         }
 
-        // PUT api/<SongsController>/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Song songObj)
+        [HttpGet]
+        public async Task<IActionResult> GetAllSongs()
         {
-            var song = await _dbContext.Songs.FindAsync(id);
-            if(song == null)
-            {
-                return NotFound("No record found against this id");
-            }
-            else
-            {
-                song.Title = songObj.Title;
-                song.Language = songObj.Language;
-                await _dbContext.SaveChangesAsync();
-                return Ok("Record Updated Successfully");
-            }
+            var songs = await _dbContext.Songs
+                .Select(s => new { s.Id, s.Title, s.Duration })
+                .ToListAsync();
+            return Ok(songs);
         }
 
-        // DELETE api/<SongsController>/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpGet("[action]")]
+        public async Task<IActionResult> FeaturedSongs()
         {
-            var song = await _dbContext.Songs.FindAsync(id);
-            if(song == null)
-            {
-                return NotFound("No record found against this id");
-            }
-            else
-            {
-                _dbContext.Songs.Remove(song);
-                await _dbContext.SaveChangesAsync();
-                return Ok("Record Deleted");
-            }
+            var songs = await _dbContext.Songs
+                .Where(s=>s.IsFeatured == true)
+                .Select(s => new { s.Id, s.Title, s.Duration })
+                .ToListAsync();
+            return Ok(songs);
         }
 
+        [HttpGet("[action]")]
+        public async Task<IActionResult> NewSongs()
+        {
+            var songs = await _dbContext.Songs
+                .OrderByDescending(s=> s.UploadedDate)
+                .Select(s => new { s.Id, s.Title, s.Duration })
+                .Take(3) // so luong record hien thi trong db la 3
+                .ToListAsync();
+            return Ok(songs);
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> SearchSongs(string query)
+        {
+            var songs = await _dbContext.Songs
+                .Where(s=>s.Title.StartsWith(query))
+                .Select(s => new { s.Id, s.Title, s.Duration })
+                .Take(3) // so luong record hien thi trong db la 3
+                .ToListAsync();
+            return Ok(songs);
+        }
     }
 }
